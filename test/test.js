@@ -115,79 +115,6 @@ next = function next(name) {
 
 // Tests are run in the order they are defined, so FLUSHDB should always be first.
 
-tests.IPV4 = function () {
-    var ipv4Client = redis.createClient( PORT, "127.0.0.1", { family : "IPv4", parser: parser } );
-
-    ipv4Client.once("ready", function start_tests() {
-        console.log("Connected to " + ipv4Client.address + ", Redis server version " + ipv4Client.server_info.redis_version + "\n");
-        console.log("Using reply parser " + ipv4Client.reply_parser.name);
-
-        ipv4Client.quit();
-        run_next_test();
-    });
-
-    ipv4Client.on('end', function () {
-
-    });
-
-    // Exit immediately on connection failure, which triggers "exit", below, which fails the test
-    ipv4Client.on("error", function (err) {
-        console.error("client: " + err.stack);
-        process.exit();
-    });
-}
-
-tests.IPV6 = function () {
-    if (!server_version_at_least(client, [2, 8, 0])) {
-        console.log("Skipping IPV6 for old Redis server version < 2.8.0");
-        return run_next_test();
-    }
-    var ipv6Client = redis.createClient( PORT, "::1", { family: "IPv6", parser: parser } );
-
-    ipv6Client.once("ready", function start_tests() {
-        console.log("Connected to " + ipv6Client.address + ", Redis server version " + ipv6Client.server_info.redis_version + "\n");
-        console.log("Using reply parser " + ipv6Client.reply_parser.name);
-
-        ipv6Client.quit();
-        run_next_test();
-    });
-
-    ipv6Client.on('end', function () {
-
-    });
-
-    // Exit immediately on connection failure, which triggers "exit", below, which fails the test
-    ipv6Client.on("error", function (err) {
-        console.error("client: " + err.stack);
-        process.exit();
-    });
-}
-
-tests.UNIX_SOCKET = function () {
-    var unixClient = redis.createClient('/tmp/redis.sock', { parser: parser });
-
-    // if this fails, check the permission of unix socket.
-    // unixsocket /tmp/redis.sock
-    // unixsocketperm 777
-
-    unixClient.once('ready', function start_tests(){
-        console.log("Connected to " + unixClient.address + ", Redis server version " + unixClient.server_info.redis_version + "\n");
-        console.log("Using reply parser " + unixClient.reply_parser.name);
-
-        unixClient.quit();
-        run_next_test();
-    });
-
-    unixClient.on( 'end', function(){
-
-    });
-
-    // Exit immediately on connection failure, which triggers "exit", below, which fails the test
-    unixClient.on("error", function (err) {
-        console.error("client: " + err.stack);
-        process.exit();
-    });
-}
 
 tests.FLUSHDB = function () {
     var name = "FLUSHDB";
@@ -931,30 +858,6 @@ tests.socket_nodelay = function () {
     c1.on("ready", ready_check);
     c2.on("ready", ready_check);
     c3.on("ready", ready_check);
-};
-
-tests.reconnect = function () {
-    var name = "reconnect";
-
-    client.set("recon 1", "one");
-    client.set("recon 2", "two", function (err, res) {
-        // Do not do this in normal programs. This is to simulate the server closing on us.
-        // For orderly shutdown in normal programs, do client.quit()
-        client.stream.destroy();
-    });
-
-    client.on("reconnecting", function on_recon(params) {
-        client.on("connect", function on_connect() {
-            client.select(test_db_num, require_string("OK", name));
-            client.get("recon 1", require_string("one", name));
-            client.get("recon 1", require_string("one", name));
-            client.get("recon 2", require_string("two", name));
-            client.get("recon 2", require_string("two", name));
-            client.removeListener("connect", on_connect);
-            client.removeListener("reconnecting", on_recon);
-            next(name);
-        });
-    });
 };
 
 tests.reconnect_select_db_after_pubsub = function() {
