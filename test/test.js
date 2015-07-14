@@ -115,17 +115,6 @@ next = function next(name) {
 
 // Tests are run in the order they are defined, so FLUSHDB should always be first.
 
-
-tests.FLUSHDB = function () {
-    var name = "FLUSHDB";
-    client.select(test_db_num, require_string("OK", name));
-    client2.select(test_db_num, require_string("OK", name));
-    client3.select(test_db_num, require_string("OK", name));
-    client.mset("flush keys 1", "flush val 1", "flush keys 2", "flush val 2", require_string("OK", name));
-    client.FLUSHDB(require_string("OK", name));
-    client.dbsize(last(name, require_number(0, name)));
-};
-
 tests.INCR = function () {
     var name = "INCR";
 
