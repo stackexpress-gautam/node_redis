@@ -115,25 +115,6 @@ next = function next(name) {
 
 // Tests are run in the order they are defined, so FLUSHDB should always be first.
 
-tests.INCR = function () {
-    var name = "INCR";
-
-    if (bclient.reply_parser.name == "hiredis") {
-        console.log("Skipping INCR buffer test with hiredis");
-        return next(name);
-    }
-
-    // Test incr with the maximum JavaScript number value. Since we are
-    // returning buffers we should get back one more as a Buffer.
-    bclient.set("seq", "9007199254740992", function (err, result) {
-        assert.strictEqual(result.toString(), "OK");
-        bclient.incr("seq", function (err, result) {
-            assert.strictEqual("9007199254740993", result.toString());
-            next(name);
-        });
-    });
-};
-
 tests.MULTI_1 = function () {
     var name = "MULTI_1", multi1, multi2;
 
